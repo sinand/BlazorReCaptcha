@@ -38,7 +38,7 @@ or
 
 ``` csharp
 @code {
-    async Task HandleClientSuccess(string response)
+    async Task HandleClientSuccess()
     {
         // Handle client-side success
     }
@@ -100,7 +100,7 @@ You can configure the reCAPTCHA keys in your `appsettings.json` file:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
 ## Acknowledgments
 
