@@ -1,0 +1,125 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using BlazorReCaptcha
+@using System.ComponentModel
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IJSRuntime JS
+@inject IConfiguration Configuration
+
+@rendermode InteractiveServer
+
+<div id="@UniqueId"></div>
+
+@code {
+
+    [Parameter]
+    public string? SiteKey { get; set; }
+
+    [Parameter]
+    public string? Secret { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnClientSuccess { get; set; }
+
+    [Parameter]
+    public EventCallback OnExpired { get; set; }
+
+    public bool ClientIsValid { get; set; }
+
+    private string UniqueId = Guid.NewGuid().ToString();
+
+    private int WidgetId;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (string.IsNullOrEmpty(SiteKey))
+        {
+            SiteKey = Configuration.GetSection("ReCaptcha")["Sitekey"];
+        }
+
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeAsync<object>("BlazorReCaptcha.init");
+                this.WidgetId = await JS.InvokeAsync<int>("BlazorReCaptcha.render", DotNetObjectReference.Create(this), UniqueId, SiteKey);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
+    }
+
+    [JSInvokable, EditorBrowsable(EditorBrowsableState.Never)]
+    public void CallbackOnClientSuccess(string response)
+    {
+        ClientIsValid = true;
+        if (OnClientSuccess.HasDelegate)
+        {
+            OnClientSuccess.InvokeAsync(response);
+        }
+    }
+
+    [JSInvokable, EditorBrowsable(EditorBrowsableState.Never)]
+    public void CallbackOnExpired()
+    {
+        ClientIsValid = false;
+        if (OnExpired.HasDelegate)
+        {
+            OnExpired.InvokeAsync(null);
+        }
+    }
+
+    public ValueTask<string> GetResponseAsync()
+    {
+        return JS.InvokeAsync<string>("BlazorReCaptcha.getResponse", WidgetId);
+    }
+
+    public async Task Reset()
+    {
+        ClientIsValid = false;
+        await JS.InvokeVoidAsync("BlazorReCaptcha.reset");
+    }
+
+    private static readonly HttpClient _httpClient = new HttpClient();
+
+    public async Task<ReCaptchaResponse> Verify(string gresponse)
+    {
+        var url = "https://www.google.com/recaptcha/api/siteverify";
+
+        if (string.IsNullOrEmpty(Secret))
+        {
+            Secret = Configuration.GetSection("ReCaptcha")["Secret"];
+        }
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "secret", Secret },
+            { "response", gresponse }
+        };
+
+        var content = new FormUrlEncodedContent(parameters);
+
+        HttpResponseMessage response = await _httpClient.PostAsync(url, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            string responseContent = await response.Content.ReadAsStringAsync();
+            ReCaptchaResponse? captchaResponse = JsonSerializer.Deserialize<ReCaptchaResponse>(responseContent);
+            return captchaResponse ?? new ReCaptchaResponse { success = false };
+            //  return captchaResponse?.Success ?? false;
+        }
+        else
+        {
+            return new ReCaptchaResponse { success = false };
+        }
+    }
+}

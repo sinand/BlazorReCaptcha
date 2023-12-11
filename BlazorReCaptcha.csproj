@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+	<PropertyGroup>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<IsPackable>true</IsPackable>
+		<PackageId>BlazorReCaptcha</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Sinan Doğanlı</Authors>
+		<Description>
+ReCaptcha component for Blazor
+		</Description>
+		<PackageProjectUrl>https://github.com/sinand/BlazorReCaptcha</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/sinand/BlazorReCaptcha</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<LicenseUrl>https://opensource.org/licenses/MIT</LicenseUrl>
+		<PackageTags>Blazor ReCaptcha</PackageTags>
+		<Title>Blazor ReCaptcha</Title>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	</PropertyGroup>
+ 
+	<ItemGroup>
+		<None Include="Readme.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Include="LICENSE.txt">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="LICENSE.txt">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+</Project>
